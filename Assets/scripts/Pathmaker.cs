@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 // MAZE PROC GEN LAB
 // all students: complete steps 1-6, as listed in this file
@@ -18,7 +19,17 @@ public class Pathmaker : MonoBehaviour {
 //	Declare a private integer called counter that starts at 0; 		// counter will track how many floor tiles I've instantiated
 //	Declare a public Transform called floorPrefab, assign the prefab in inspector;
 //	Declare a public Transform called pathmakerSpherePrefab, assign the prefab in inspector; 		// you'll have to make a "pathmakerSphere" prefab later
+	private int counter=0;
+	public GameObject floorPrefab;
+	public GameObject pathmakerSpherePrefab;
+	public static int floorNum=0;
+	public int maxTiles=500;
+	public float turnProbability=0.25f;
+	public int roomSize=20;
+	public int corridorSize=8;
+	public bool roomMode=true;
 
+	public float movementUnit=0.1f;
 
 	void Update () {
 //		If counter is less than 50, then:
@@ -28,12 +39,52 @@ public class Pathmaker : MonoBehaviour {
 //				... Else if number is 0.99f-1.0f, then instantiate a pathmakerSpherePrefab clone at my current position;
 //			// end elseIf
 
+		if (floorNum<maxTiles){
+			float f=Random.Range(0f, 1f);
+			if(f<turnProbability){
+				transform.Rotate(0,0,90);
+			}else if(f<turnProbability*2f){
+				transform.Rotate(0,0,-90);
+			}else if(f>0.99f && f<1f){
+				GameObject newSphere;
+				newSphere=Instantiate(pathmakerSpherePrefab,transform.position,transform.rotation,transform.parent);
+				print("new sphere");
+			}
 //			Instantiate a floorPrefab clone at current position;
 //			Move forward ("forward", as in, the direction I'm currently facing) by 5 units;
 //			Increment counter;
 //		Else:
 //			Destroy my game object; 		// self destruct if I've made enough tiles already
+			GameObject newFloor;
+			newFloor=Instantiate(floorPrefab,transform.position,new Quaternion(0,0,0,0),transform.parent);
+			transform.Translate(Vector3.right*movementUnit);
+			floorNum++;
+			counter++;
+			if(roomMode && counter>roomSize){
+				turnProbability=0.01f;
+				roomSize=Random.Range(15,30);
+				counter=0;
+				roomMode=!roomMode;
+			}else if(!roomMode && counter>corridorSize){
+				turnProbability=0.25f;
+				corridorSize=Random.Range(6,12);
+				counter=0;
+				roomMode=!roomMode;
+			}
+		}else{
+			//Destroy(gameObject);
+		}
+
+		if(Input.GetKeyDown(KeyCode.R)){
+			floorNum=0;
+			Scene scene = SceneManager.GetActiveScene(); 
+			SceneManager.LoadScene(scene.name);
+			print("r pressed");
+		}
+	
 	}
+
+
 
 } 
 
