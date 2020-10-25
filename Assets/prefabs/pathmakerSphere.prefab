@@ -46,6 +46,7 @@ MonoBehaviour:
   floorPrefab: {fileID: 5160955384586152705, guid: 6092426663aa3c64aad4bdf282baedbc,
     type: 3}
   pathmakerSpherePrefab: {fileID: 1638956150907056677}
+  staticFloor: 0
   maxTiles: 500
   turnProbability: 0.25
   roomSize: 20

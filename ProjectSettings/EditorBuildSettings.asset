@@ -4,4 +4,8 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/scenes/hatimScene.unity
+    guid: 8aee64aa6a763f243950169762d48d72
+  m_configObjects: {}

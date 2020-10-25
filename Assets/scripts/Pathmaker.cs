@@ -23,15 +23,32 @@ public class Pathmaker : MonoBehaviour {
 	public GameObject floorPrefab;
 	public GameObject pathmakerSpherePrefab;
 	public static int floorNum=0;
-	public int maxTiles=500;
+	public static int sphereNumber=1;
+	public static int endedSpheres=0;
+	public int staticFloor=0;
+	public int maxTiles=1000;
 	public float turnProbability=0.25f;
-	public int roomSize=20;
-	public int corridorSize=8;
+	public int roomSize=30;
+	public int corridorSize=20;
 	public bool roomMode=true;
+	bool end=false;
 
+	Vector3 positions;
+	float maxDistance;
+	public static Vector3 origin=new Vector3(10f,10f,10f);
 	public float movementUnit=0.1f;
 
+	void Start(){
+		positions=Camera.main.gameObject.transform.position;
+		maxDistance=Camera.main.orthographicSize;
+		if(origin==new Vector3(10f,10f,10f)){
+			origin=transform.position;
+			print("new origin");
+		}
+	}
+
 	void Update () {
+		staticFloor=floorNum;
 //		If counter is less than 50, then:
 //			Generate a random number from 0.0f to 1.0f;
 //			If random number is less than 0.25f, then rotate myself 90 degrees;
@@ -39,37 +56,63 @@ public class Pathmaker : MonoBehaviour {
 //				... Else if number is 0.99f-1.0f, then instantiate a pathmakerSpherePrefab clone at my current position;
 //			// end elseIf
 
-		if (floorNum<maxTiles){
+		if (floorNum<maxTiles && !end){
 			float f=Random.Range(0f, 1f);
+			
 			if(f<turnProbability){
 				transform.Rotate(0,0,90);
 			}else if(f<turnProbability*2f){
 				transform.Rotate(0,0,-90);
-			}else if(f>0.99f && f<1f){
+			}else if(f>0.925f && f<1f){
 				GameObject newSphere;
 				newSphere=Instantiate(pathmakerSpherePrefab,transform.position,transform.rotation,transform.parent);
 				print("new sphere");
+				sphereNumber++;
 			}
 //			Instantiate a floorPrefab clone at current position;
 //			Move forward ("forward", as in, the direction I'm currently facing) by 5 units;
 //			Increment counter;
 //		Else:
 //			Destroy my game object; 		// self destruct if I've made enough tiles already
-			GameObject newFloor;
-			newFloor=Instantiate(floorPrefab,transform.position,new Quaternion(0,0,0,0),transform.parent);
-			transform.Translate(Vector3.right*movementUnit);
-			floorNum++;
-			counter++;
-			if(roomMode && counter>roomSize){
-				turnProbability=0.01f;
-				roomSize=Random.Range(15,30);
-				counter=0;
-				roomMode=!roomMode;
-			}else if(!roomMode && counter>corridorSize){
-				turnProbability=0.25f;
-				corridorSize=Random.Range(6,12);
-				counter=0;
-				roomMode=!roomMode;
+			bool floorAdded=false;
+			int tries=0;
+			while(!floorAdded && tries<=4){
+				transform.Translate(Vector3.right*movementUnit);
+				if(Physics2D.OverlapPoint(transform.position)==null){
+					GameObject newFloor;
+					newFloor=Instantiate(floorPrefab,transform.position,new Quaternion(0,0,0,0),transform.parent);
+					positions=positions+transform.position;
+					floorAdded=true;
+				}else{
+					transform.Translate(Vector3.left*movementUnit);
+					transform.Rotate(0,0,90);
+					tries++;
+				}
+			}
+			
+			if(floorAdded){
+				floorNum++;
+				Vector3 center=Vector3.Lerp(Camera.main.gameObject.transform.position,transform.position,1/floorNum);
+				//Camera.main.gameObject.transform.position=new Vector3(positions.x/floorNum,positions.y/floorNum,Camera.main.gameObject.transform.position.z);
+				Camera.main.gameObject.transform.position=new Vector3(center.x,center.y,Camera.main.gameObject.transform.position.z);
+				float distance=Vector3.Distance(origin,transform.position);
+				maxDistance=Mathf.Max(Camera.main.orthographicSize,distance);
+				Camera.main.orthographicSize=maxDistance;
+				counter++;
+				if(roomMode && counter>roomSize){
+					turnProbability=0.01f;
+					roomSize=Random.Range(25,40);
+					counter=0;
+					roomMode=!roomMode;
+				}else if(!roomMode && counter>corridorSize){
+					turnProbability=0.25f;
+					corridorSize=Random.Range(16,25);
+					counter=0;
+					roomMode=!roomMode;
+				}
+			}else{
+				end=true;
+				endedSpheres++;
 			}
 		}else{
 			//Destroy(gameObject);
@@ -77,6 +120,7 @@ public class Pathmaker : MonoBehaviour {
 
 		if(Input.GetKeyDown(KeyCode.R)){
 			floorNum=0;
+			origin=new Vector3(10f,10f,10f);
 			Scene scene = SceneManager.GetActiveScene(); 
 			SceneManager.LoadScene(scene.name);
 			print("r pressed");
